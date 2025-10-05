@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: tool-download-video
+    env: python
+    plan: free
+    region: frankfurt
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn -w 2 -k gthread -t 120 -b 0.0.0.0:$PORT app:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: YTDLP_HOME
+        value: /opt/render/project/.ytdlp
+    autoDeploy: true

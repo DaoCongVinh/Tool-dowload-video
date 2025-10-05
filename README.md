@@ -51,3 +51,13 @@ Ghi chú
   pip install -U yt-dlp
   ```
 
+Triển khai lên Render
+---------------------
+1) Đảm bảo mã đã đẩy lên GitHub.
+2) Tạo file `render.yaml` (đã có sẵn) và `Procfile` (đã có sẵn).
+3) Truy cập `https://dashboard.render.com` → New + → Blueprint → chọn repo.
+4) Render sẽ đọc `render.yaml`, tự cài đặt và chạy lệnh start (gunicorn).
+
+Lưu ý Render/FFmpeg:
+- Trích xuất MP3 cần FFmpeg. Trên Render, `FFmpeg` không cài sẵn; `yt-dlp` vẫn có thể tải video/mp4 trực tiếp. Nếu cần MP3, xem phương án bật `postprocessors` chỉ khi FFmpeg khả dụng, hoặc chuyển sang tải m4a/opus.
+
