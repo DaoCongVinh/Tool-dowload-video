@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Trình tải video đa nền tảng</title>
+    <link rel="icon" href="/static/icon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="header">
+        <div class="brand">
+          <div class="logo">⬇️</div>
+          <div class="titles">
+            <h1>Trình tải video</h1>
+            <p>Facebook · Instagram · Threads · TikTok · YouTube · Reddit</p>
+          </div>
+        </div>
+      </header>
+
+      <main class="main">
+        <section class="card">
+          <div class="form">
+            <label for="url" class="label">Dán liên kết video</label>
+            <div class="input-row">
+              <input id="url" type="url" placeholder="https://..." autofocus />
+              <div class="mode">
+                <label><input type="radio" name="mode" value="video" checked /> Video</label>
+                <label><input type="radio" name="mode" value="audio" /> Âm thanh</label>
+              </div>
+              <button id="downloadBtn" class="btn-primary">Tải xuống</button>
+            </div>
+            <p class="help">Hỗ trợ các nền tảng phổ biến. Một số video riêng tư có thể không tải được.</p>
+          </div>
+
+          <div id="status" class="status hidden">
+            <div class="spinner"></div>
+            <span id="statusText">Đang chuẩn bị tải...</span>
+          </div>
+
+          <div id="error" class="error hidden"></div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <p>
+          Sử dụng cho mục đích hợp pháp. Tôn trọng bản quyền và điều khoản nền tảng.
+        </p>
+      </footer>
+    </div>
+
+    <script src="/static/app.js"></script>
+  </body>
+  </html>
+
