@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/style.css" />
   </head>
   <body>
@@ -20,9 +21,10 @@
             <p>Facebook · Instagram · Threads · TikTok · YouTube · Reddit</p>
           </div>
           <nav class="nav">
-            <button class="nav-item active" data-target="#sec-single">Tải 1 video</button>
-            <button class="nav-item" data-target="#sec-channel">Tải kênh</button>
-            <button class="nav-item" data-target="#sec-profile">Tải tài khoản</button>
+            <button class="nav-item active" data-target="#sec-single"><span class="material-symbols-rounded">link</span><span>Tải 1 video</span></button>
+            <button class="nav-item" data-target="#sec-channel"><span class="material-symbols-rounded">subscriptions</span><span>Tải kênh</span></button>
+            <button class="nav-item" data-target="#sec-profile"><span class="material-symbols-rounded">person</span><span>Tải tài khoản</span></button>
+            <button id="themeToggle" class="nav-item" title="Đổi giao diện"><span class="material-symbols-rounded">brightness_6</span></button>
           </nav>
         </div>
       </header>
@@ -37,7 +39,7 @@
                 <label><input type="radio" name="mode" value="video" checked /> Video</label>
                 <label><input type="radio" name="mode" value="audio" /> Âm thanh</label>
               </div>
-              <button id="downloadBtn" class="btn-primary">Tải xuống</button>
+              <button id="downloadBtn" class="btn-primary"><span class="material-symbols-rounded">download</span><span>Tải xuống</span></button>
             </div>
             <p class="help">Hỗ trợ các nền tảng phổ biến. Một số video riêng tư có thể không tải được.</p>
           </div>
@@ -60,7 +62,7 @@
                 <label><input type="radio" name="modeChannel" value="video" checked /> Video</label>
                 <label><input type="radio" name="modeChannel" value="audio" /> Âm thanh</label>
               </div>
-              <button id="channelBtn" class="btn-primary">Tải kênh</button>
+              <button id="channelBtn" class="btn-primary"><span class="material-symbols-rounded">subscriptions</span><span>Tải kênh</span></button>
             </div>
             <p class="help">Nhập username/handle kênh YouTube. Hệ thống sẽ tải N video mới nhất, bỏ qua video đã tải.</p>
           </div>
@@ -84,7 +86,7 @@
                 <option value="720p">720p</option>
               </select>
               <input id="pfCount" type="number" min="1" max="100" value="5" style="max-width:120px;" />
-              <button id="pfBtn" class="btn-primary">Tải tài khoản</button>
+              <button id="pfBtn" class="btn-primary"><span class="material-symbols-rounded">cloud_download</span><span>Tải tài khoản</span></button>
             </div>
             <p class="help">Hỗ trợ bỏ qua video đã tải. Một số nền tảng có thể yêu cầu cookie đăng nhập.</p>
           </div>
@@ -100,6 +102,7 @@
     </div>
 
     <script src="/static/app.js"></script>
+    <div id="snackbar" class="snackbar hidden"><span id="snackbarText"></span></div>
   </body>
   </html>
 

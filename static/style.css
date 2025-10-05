@@ -9,13 +9,25 @@
   --ring: 0 0 0 2px rgba(106, 161, 255, 0.35);
 }
 
+:root.light {
+  --bg: #f7f9fc;
+  --surface: #ffffff;
+  --muted: #6b7280;
+  --text: #0b1220;
+  --primary: #2563eb;
+  --primary-600: #1d4ed8;
+  --error: #dc2626;
+  --ring: 0 0 0 2px rgba(37, 99, 235, 0.35);
+}
+
 * { box-sizing: border-box; }
 html, body { height: 100%; }
 body {
   margin: 0;
   font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji';
-  background: radial-gradient(1200px 800px at 20% -10%, #1e2230 0%, #0a0b0f 60%);
+  background: radial-gradient(1200px 800px at 20% -10%, #1e2230 0%, var(--bg) 60%);
   color: var(--text);
+  transition: background-color .35s ease, color .35s ease;
 }
 
 .app-shell {
@@ -52,6 +64,10 @@ body {
   padding: 8px 12px;
   border-radius: 10px;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: background .25s ease, border-color .25s ease, color .25s ease, box-shadow .25s ease;
 }
 .nav-item.active {
   background: linear-gradient(180deg, var(--primary), var(--primary-600));
@@ -69,6 +85,7 @@ body {
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
   position: relative;
   overflow: hidden;
+  transition: border-color .35s ease, background .35s ease, box-shadow .35s ease;
 }
 .card:before {
   content: "";
@@ -158,9 +175,25 @@ body {
   cursor: pointer;
   height: 44px;
   transition: filter .2s ease, transform .08s ease, box-shadow .2s ease;
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 .btn-primary:hover { filter: brightness(1.05); box-shadow: 0 8px 22px rgba(106,161,255,0.35); }
 .btn-primary:active { transform: translateY(1px); box-shadow: none; }
+
+/* Ripple effect */
+.btn-primary .ripple {
+  position: absolute;
+  border-radius: 999px;
+  transform: scale(0);
+  animation: ripple 600ms linear;
+  background: rgba(255,255,255,0.55);
+  pointer-events: none;
+}
+@keyframes ripple { to { transform: scale(8); opacity: 0; } }
 
 .help { margin: 4px 2px; color: var(--muted); font-size: 12px; }
 
@@ -180,6 +213,21 @@ body {
 .hidden { display: none; }
 
 .footer { color: var(--muted); font-size: 12px; text-align: center; padding: 30px 16px; }
+
+/* Snackbar */
+.snackbar {
+  position: fixed;
+  left: 50%;
+  bottom: 28px;
+  transform: translateX(-50%);
+  background: rgba(20, 22, 30, 0.95);
+  color: #fff;
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.12);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+  z-index: 40;
+}
 
 @media (max-width: 640px) {
   .input-row { grid-template-columns: 1fr; }
