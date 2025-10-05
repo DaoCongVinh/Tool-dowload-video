@@ -77,6 +77,17 @@ async function download() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  // Tabs
+  document.querySelectorAll('.nav-item').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const target = btn.getAttribute('data-target');
+      document.querySelectorAll('main .card').forEach(sec => sec.classList.add('hidden'));
+      if (target) document.querySelector(target)?.classList.remove('hidden');
+    });
+  });
+
   $("#downloadBtn").addEventListener("click", (e) => {
     e.preventDefault();
     download();
@@ -88,5 +99,134 @@ document.addEventListener("DOMContentLoaded", () => {
       download();
     }
   });
+
+  const chBtn = document.querySelector("#channelBtn");
+  if (chBtn) {
+    chBtn.addEventListener("click", async (e) => {
+      e.preventDefault();
+      await channelDownload();
+    });
+  }
+
+  const pfBtn = document.querySelector('#pfBtn');
+  if (pfBtn) {
+    pfBtn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      await profileDownload();
+    });
+  }
 });
+
+async function channelDownload() {
+  const err = document.querySelector('#chError');
+  err?.classList.add('hidden');
+  if (err) err.textContent = '';
+
+  const handle = document.querySelector('#ytHandle')?.value.trim();
+  const count = parseInt(document.querySelector('#ytCount')?.value || '0', 10) || 0;
+  const mode = document.querySelector('input[name="modeChannel"]:checked')?.value || 'video';
+  if (!handle || count <= 0) {
+    if (err) { err.textContent = 'Vui lòng nhập username và số lượng hợp lệ.'; err.classList.remove('hidden'); }
+    return;
+  }
+
+  setStatus(true, 'Đang tải video từ kênh...');
+  const btn = document.querySelector('#channelBtn');
+  btn.disabled = true;
+  try {
+    const res = await fetch('/api/channel_download', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: handle, count, mode }),
+    });
+    if (!res.ok) {
+      let msg = `Lỗi tải (${res.status})`;
+      try { const j = await res.json(); if (j?.error) msg = j.error; } catch (_) {}
+      throw new Error(msg);
+    }
+
+    // if server says no new files
+    const cd = res.headers.get('Content-Type') || '';
+    if (cd.includes('application/json')) {
+      const j = await res.json();
+      if (j?.message) {
+        if (err) { err.textContent = j.message; err.classList.remove('hidden'); }
+        return;
+      }
+    }
+
+    let filename = 'channel.zip';
+    const dispo = res.headers.get('Content-Disposition');
+    if (dispo) {
+      const m = dispo.match(/filename\*=UTF-8''([^;]+)|filename="?([^";]+)"?/i);
+      const picked = decodeURIComponent(m?.[1] || m?.[2] || '');
+      if (picked) filename = picked;
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  } catch (e) {
+    if (err) { err.textContent = e?.message || 'Có lỗi xảy ra.'; err.classList.remove('hidden'); }
+  } finally {
+    setStatus(false);
+    btn.disabled = false;
+  }
+}
+
+async function profileDownload() {
+  const err = document.querySelector('#pfError');
+  err?.classList.add('hidden');
+  if (err) err.textContent = '';
+
+  const username = document.querySelector('#pfHandle')?.value.trim();
+  const platform = document.querySelector('#pfPlatform')?.value || 'youtube';
+  const count = parseInt(document.querySelector('#pfCount')?.value || '0', 10) || 0;
+  const quality = document.querySelector('#pfQuality')?.value || 'auto';
+  const mode = 'video';
+  if (!username || count <= 0) {
+    if (err) { err.textContent = 'Vui lòng nhập username và số lượng hợp lệ.'; err.classList.remove('hidden'); }
+    return;
+  }
+
+  setStatus(true, 'Đang tải từ tài khoản...');
+  const btn = document.querySelector('#pfBtn');
+  btn.disabled = true;
+  try {
+    const res = await fetch('/api/profile_download', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ platform, username, count, quality, mode }),
+    });
+    if (!res.ok) {
+      let msg = `Lỗi tải (${res.status})`;
+      try { const j = await res.json(); if (j?.error) msg = j.error; } catch (_) {}
+      throw new Error(msg);
+    }
+    const ctype = res.headers.get('Content-Type') || '';
+    if (ctype.includes('application/json')) {
+      const j = await res.json();
+      if (j?.message) {
+        if (err) { err.textContent = j.message; err.classList.remove('hidden'); }
+        return;
+      }
+    }
+    let filename = 'profile.zip';
+    const dispo = res.headers.get('Content-Disposition');
+    if (dispo) {
+      const m = dispo.match(/filename\*=UTF-8''([^;]+)|filename="?([^";]+)"?/i);
+      const picked = decodeURIComponent(m?.[1] || m?.[2] || '');
+      if (picked) filename = picked;
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  } catch (e) {
+    if (err) { err.textContent = e?.message || 'Có lỗi xảy ra.'; err.classList.remove('hidden'); }
+  } finally {
+    setStatus(false);
+    btn.disabled = false;
+  }
+}
 

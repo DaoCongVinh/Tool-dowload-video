@@ -19,11 +19,16 @@
             <h1>Trình tải video</h1>
             <p>Facebook · Instagram · Threads · TikTok · YouTube · Reddit</p>
           </div>
+          <nav class="nav">
+            <button class="nav-item active" data-target="#sec-single">Tải 1 video</button>
+            <button class="nav-item" data-target="#sec-channel">Tải kênh</button>
+            <button class="nav-item" data-target="#sec-profile">Tải tài khoản</button>
+          </nav>
         </div>
       </header>
 
       <main class="main">
-        <section class="card">
+        <section id="sec-single" class="card">
           <div class="form">
             <label for="url" class="label">Dán liên kết video</label>
             <div class="input-row">
@@ -43,6 +48,47 @@
           </div>
 
           <div id="error" class="error hidden"></div>
+        </section>
+
+        <section id="sec-channel" class="card hidden" style="margin-top:20px;">
+          <div class="form">
+            <label class="label">Tải video theo kênh YouTube</label>
+            <div class="input-row">
+              <input id="ytHandle" type="text" placeholder="@tenkenh hoặc tenkenh" />
+              <input id="ytCount" type="number" min="1" max="100" value="5" style="max-width:140px;" />
+              <div class="mode">
+                <label><input type="radio" name="modeChannel" value="video" checked /> Video</label>
+                <label><input type="radio" name="modeChannel" value="audio" /> Âm thanh</label>
+              </div>
+              <button id="channelBtn" class="btn-primary">Tải kênh</button>
+            </div>
+            <p class="help">Nhập username/handle kênh YouTube. Hệ thống sẽ tải N video mới nhất, bỏ qua video đã tải.</p>
+          </div>
+          <div id="chError" class="error hidden"></div>
+        </section>
+
+        <section id="sec-profile" class="card hidden" style="margin-top:20px;">
+          <div class="form">
+            <label class="label">Tải theo tài khoản (YouTube/TikTok/Instagram/Reddit)</label>
+            <div class="input-row" style="grid-template-columns: 1fr auto auto auto auto;">
+              <input id="pfHandle" type="text" placeholder="username hoặc @username" />
+              <select id="pfPlatform">
+                <option value="youtube">YouTube</option>
+                <option value="tiktok">TikTok</option>
+                <option value="instagram">Instagram</option>
+                <option value="reddit">Reddit</option>
+              </select>
+              <select id="pfQuality">
+                <option value="auto">Auto</option>
+                <option value="1080p">1080p</option>
+                <option value="720p">720p</option>
+              </select>
+              <input id="pfCount" type="number" min="1" max="100" value="5" style="max-width:120px;" />
+              <button id="pfBtn" class="btn-primary">Tải tài khoản</button>
+            </div>
+            <p class="help">Hỗ trợ bỏ qua video đã tải. Một số nền tảng có thể yêu cầu cookie đăng nhập.</p>
+          </div>
+          <div id="pfError" class="error hidden"></div>
         </section>
       </main>
 

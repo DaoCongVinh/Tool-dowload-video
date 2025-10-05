@@ -12,6 +12,10 @@ import yt_dlp
 
 app = Flask(__name__, static_folder="static", template_folder="templates")
 
+# Persistent downloads root (skips re-downloads across sessions)
+DOWNLOADS_ROOT = Path("downloads")
+DOWNLOADS_ROOT.mkdir(parents=True, exist_ok=True)
+
 
 def sanitize_filename(name: str) -> str:
     """Return a safe filename by removing characters not allowed on Windows/macOS/Linux."""
@@ -147,6 +151,197 @@ def download():
         as_attachment=True,
         download_name=download_name,
         mimetype=guessed_mime,
+        conditional=True,
+        max_age=0,
+    )
+
+
+@app.post("/api/channel_download")
+def channel_download():
+    data = request.get_json(silent=True) or {}
+    raw_username = (data.get("username") or "").strip()
+    count = int(data.get("count") or 0)
+    mode = (data.get("mode") or "video").strip().lower()
+
+    if not raw_username:
+        return jsonify({"ok": False, "error": "Missing username"}), 400
+    if count <= 0 or count > 100:
+        return jsonify({"ok": False, "error": "Count must be 1-100"}), 400
+
+    # Normalize handle (remove any leading @)
+    handle = raw_username.lstrip("@")
+    # yt-dlp can take the channel page URL
+    channel_url = f"https://www.youtube.com/@{handle}/videos"
+
+    # Persist downloads under per-handle directory
+    handle_dir = DOWNLOADS_ROOT / sanitize_filename(handle)
+    handle_dir.mkdir(parents=True, exist_ok=True)
+    archive_file = handle_dir / "archive.txt"
+
+    is_audio = mode == "audio"
+
+    ydl_opts: dict = {
+        "paths": {"home": str(handle_dir)},
+        "outtmpl": {"default": "%(title)s-%(id)s.%(ext)s"},
+        "quiet": True,
+        "no_warnings": True,
+        "restrictfilenames": True,
+        "noplaylist": False,
+        # Limit number of items
+        "playlistend": count,
+        # Skip already downloaded by id
+        "download_archive": str(archive_file),
+        # Merge format
+        "merge_output_format": "mp4" if not is_audio else None,
+    }
+
+    if is_audio:
+        ydl_opts.update(
+            {
+                "format": "bestaudio/best",
+                "postprocessors": [
+                    {
+                        "key": "FFmpegExtractAudio",
+                        "preferredcodec": "mp3",
+                        "preferredquality": "192",
+                    }
+                ],
+            }
+        )
+    else:
+        ydl_opts.update({"format": "bestvideo+bestaudio/best"})
+
+    # Track files created during this invocation
+    before_files = {p.resolve() for p in handle_dir.glob("**/*") if p.is_file()}
+
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            ydl.extract_info(channel_url, download=True)
+    except Exception as exc:  # pylint: disable=broad-except
+        return jsonify({"ok": False, "error": f"Channel download failed: {str(exc)}"}), 400
+
+    after_files = [p for p in handle_dir.glob("**/*") if p.is_file()]
+    new_files = [p for p in after_files if p.resolve() not in before_files]
+
+    if not new_files:
+        return jsonify({"ok": True, "message": "No new videos to download (all skipped).", "files": []})
+
+    # Zip only new files and return
+    import zipfile
+    temp_zip = Path(tempfile.mkdtemp(prefix="zip_")) / f"{handle}-{uuid.uuid4().hex[:6]}.zip"
+    with zipfile.ZipFile(temp_zip, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+        for f in new_files:
+            # Place under handle/ inside zip
+            zf.write(f, arcname=f"{handle}/{f.name}")
+
+    return send_file(
+        str(temp_zip),
+        as_attachment=True,
+        download_name=f"{handle}-{len(new_files)}-videos.zip",
+        mimetype="application/zip",
+        conditional=True,
+        max_age=0,
+    )
+
+
+def build_profile_url(platform: str, handle: str) -> str:
+    p = platform.lower()
+    h = handle.lstrip("@")
+    if p == "youtube":
+        return f"https://www.youtube.com/@{h}/videos"
+    if p == "tiktok":
+        return f"https://www.tiktok.com/@{h}"
+    if p == "instagram":
+        return f"https://www.instagram.com/{h}/"
+    if p == "reddit":
+        return f"https://www.reddit.com/user/{h}/submitted/"
+    # default: try as is
+    return h
+
+
+def format_for_quality(is_audio: bool, quality: str) -> dict:
+    if is_audio:
+        return {
+            "format": "bestaudio/best",
+            "postprocessors": [
+                {
+                    "key": "FFmpegExtractAudio",
+                    "preferredcodec": "mp3",
+                    "preferredquality": "192",
+                }
+            ],
+        }
+    q = (quality or "auto").lower()
+    if q == "1080p":
+        return {"format": "bestvideo[height<=1080]+bestaudio/best[height<=1080]"}
+    if q == "720p":
+        return {"format": "bestvideo[height<=720]+bestaudio/best[height<=720]"}
+    return {"format": "bestvideo+bestaudio/best"}
+
+
+@app.post("/api/profile_download")
+def profile_download():
+    data = request.get_json(silent=True) or {}
+    platform = (data.get("platform") or "youtube").strip().lower()
+    raw_username = (data.get("username") or "").strip()
+    count = int(data.get("count") or 0)
+    mode = (data.get("mode") or "video").strip().lower()
+    quality = (data.get("quality") or "auto").strip()
+
+    if not raw_username:
+        return jsonify({"ok": False, "error": "Missing username"}), 400
+    if count <= 0 or count > 100:
+        return jsonify({"ok": False, "error": "Count must be 1-100"}), 400
+
+    handle = raw_username.lstrip("@")
+    profile_url = build_profile_url(platform, handle)
+
+    # per-platform dir
+    base_dir = DOWNLOADS_ROOT / sanitize_filename(platform) / sanitize_filename(handle)
+    base_dir.mkdir(parents=True, exist_ok=True)
+    archive_file = base_dir / "archive.txt"
+
+    is_audio = mode == "audio"
+    ydl_opts: dict = {
+        "paths": {"home": str(base_dir)},
+        "outtmpl": {"default": "%(title)s-%(id)s.%(ext)s"},
+        "quiet": True,
+        "no_warnings": True,
+        "restrictfilenames": True,
+        "noplaylist": False,
+        "playlistend": count,
+        "download_archive": str(archive_file),
+        "merge_output_format": "mp4" if not is_audio else None,
+    }
+
+    # quality/mode
+    ydl_opts.update(format_for_quality(is_audio, quality))
+
+    before = {p.resolve() for p in base_dir.glob("**/*") if p.is_file()}
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            ydl.extract_info(profile_url, download=True)
+    except Exception as exc:  # pylint: disable=broad-except
+        hint = " (cần cookie đăng nhập)" if platform in {"instagram", "facebook", "threads"} else ""
+        return jsonify({"ok": False, "error": f"Profile download failed: {str(exc)}{hint}"}), 400
+
+    after = [p for p in base_dir.glob("**/*") if p.is_file()]
+    new_files = [p for p in after if p.resolve() not in before]
+
+    if not new_files:
+        return jsonify({"ok": True, "message": "Không có video mới (đã bỏ qua).", "files": []})
+
+    import zipfile
+    temp_zip = Path(tempfile.mkdtemp(prefix="zip_")) / f"{platform}-{handle}-{uuid.uuid4().hex[:6]}.zip"
+    with zipfile.ZipFile(temp_zip, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+        for f in new_files:
+            zf.write(f, arcname=f"{platform}/{handle}/{f.name}")
+
+    return send_file(
+        str(temp_zip),
+        as_attachment=True,
+        download_name=f"{platform}-{handle}-{len(new_files)}-videos.zip",
+        mimetype="application/zip",
         conditional=True,
         max_age=0,
     )
