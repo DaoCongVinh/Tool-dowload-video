@@ -26,6 +26,37 @@ def sanitize_filename(name: str) -> str:
     return name or f"video-{uuid.uuid4().hex[:8]}"
 
 
+def is_youtube_url(url: str) -> bool:
+    try:
+        import urllib.parse as _urlparse
+        netloc = _urlparse.urlparse(url).netloc.lower()
+    except Exception:
+        return False
+    return any(h in netloc for h in ("youtube.com", "youtu.be"))
+
+
+def with_yt_client(opts: dict, client_name: str) -> dict:
+    updated = dict(opts)
+    ea = {"youtube": {"player_client": [client_name]}}
+    updated["extractor_args"] = ea
+    return updated
+
+
+def try_extract_with_clients(url: str, base_opts: dict, clients: list[str]) -> tuple[dict, dict]:
+    last_exc: Exception | None = None
+    for c in clients:
+        try:
+            with yt_dlp.YoutubeDL(with_yt_client(base_opts, c)) as ydl:
+                info = ydl.extract_info(url, download=True)
+                return info, with_yt_client(base_opts, c)
+        except Exception as exc:  # pylint: disable=broad-except
+            last_exc = exc
+            continue
+    if last_exc:
+        raise last_exc
+    raise RuntimeError("Extraction failed without exception")
+
+
 @app.get("/")
 def index():
     return render_template("index.html")
@@ -105,8 +136,12 @@ def download():
 
     info = None
     try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=True)
+        if is_youtube_url(url):
+            clients = ["android", "ios", "tv_embedded", "tv"]
+            info, ydl_opts = try_extract_with_clients(url, ydl_opts, clients)
+        else:
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(url, download=True)
     except Exception as exc:  # pylint: disable=broad-except
         return (
             jsonify({"ok": False, "error": f"Download failed: {str(exc)}"}),
@@ -259,8 +294,13 @@ def channel_download():
     before_files = {p.resolve() for p in handle_dir.glob("**/*") if p.is_file()}
 
     try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            ydl.extract_info(channel_url, download=True)
+        if is_youtube_url(channel_url):
+            clients = ["android", "ios", "tv_embedded", "tv"]
+            # reuse try-extract helper; ignore returned info, we only need files
+            try_extract_with_clients(channel_url, ydl_opts, clients)
+        else:
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                ydl.extract_info(channel_url, download=True)
     except Exception as exc:  # pylint: disable=broad-except
         return jsonify({"ok": False, "error": f"Channel download failed: {str(exc)}"}), 400
 
@@ -381,8 +421,12 @@ def profile_download():
 
     before = {p.resolve() for p in base_dir.glob("**/*") if p.is_file()}
     try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            ydl.extract_info(profile_url, download=True)
+        if platform == "youtube" and is_youtube_url(profile_url):
+            clients = ["android", "ios", "tv_embedded", "tv"]
+            try_extract_with_clients(profile_url, ydl_opts, clients)
+        else:
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                ydl.extract_info(profile_url, download=True)
     except Exception as exc:  # pylint: disable=broad-except
         hint = " (cần cookie đăng nhập)" if platform in {"instagram", "facebook", "threads"} else ""
         return jsonify({"ok": False, "error": f"Profile download failed: {str(exc)}{hint}"}), 400
