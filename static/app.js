@@ -24,6 +24,7 @@ async function download() {
   setError("");
   const url = $("#url").value.trim();
   const mode = document.querySelector('input[name="mode"]:checked')?.value || "video";
+  const cookies = document.querySelector('#cookies')?.value?.trim() || '';
   if (!url) {
     setError("Vui lòng dán liên kết hợp lệ.");
     return;
@@ -37,7 +38,7 @@ async function download() {
     const res = await fetch("/api/download", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url, mode }),
+      body: JSON.stringify({ url, mode, cookies }),
     });
 
     if (!res.ok) {
@@ -150,6 +151,7 @@ async function channelDownload() {
   const handle = document.querySelector('#ytHandle')?.value.trim();
   const count = parseInt(document.querySelector('#ytCount')?.value || '0', 10) || 0;
   const mode = document.querySelector('input[name="modeChannel"]:checked')?.value || 'video';
+  const cookies = document.querySelector('#chCookies')?.value?.trim() || '';
   if (!handle || count <= 0) {
     if (err) { err.textContent = 'Vui lòng nhập username và số lượng hợp lệ.'; err.classList.remove('hidden'); }
     return;
@@ -162,7 +164,7 @@ async function channelDownload() {
     const res = await fetch('/api/channel_download', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: handle, count, mode }),
+      body: JSON.stringify({ username: handle, count, mode, cookies }),
     });
     if (!res.ok) {
       let msg = `Lỗi tải (${res.status})`;
@@ -220,6 +222,7 @@ async function profileDownload() {
   const count = parseInt(document.querySelector('#pfCount')?.value || '0', 10) || 0;
   const quality = document.querySelector('#pfQuality')?.value || 'auto';
   const mode = 'video';
+  const cookies = document.querySelector('#pfCookies')?.value?.trim() || '';
   if (!username || count <= 0) {
     if (err) { err.textContent = 'Vui lòng nhập username và số lượng hợp lệ.'; err.classList.remove('hidden'); }
     return;
@@ -232,7 +235,7 @@ async function profileDownload() {
     const res = await fetch('/api/profile_download', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ platform, username, count, quality, mode }),
+      body: JSON.stringify({ platform, username, count, quality, mode, cookies }),
     });
     if (!res.ok) {
       let msg = `Lỗi tải (${res.status})`;

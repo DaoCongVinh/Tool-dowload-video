@@ -36,6 +36,7 @@ def download():
     data = request.get_json(silent=True) or {}
     url = (data.get("url") or "").strip()
     mode = (data.get("mode") or "video").strip().lower()  # "video" or "audio"
+    raw_cookies = (data.get("cookies") or "").strip()
 
     if not url:
         return jsonify({"ok": False, "error": "Missing URL"}), 400
@@ -59,6 +60,27 @@ def download():
         # Fail on playlist by default; we take only first entry if playlist
         "noplaylist": False,
     }
+
+    # Provide a realistic UA and optional Cookie header for platforms that require login
+    # Referer helps some CDNs; we can set it to the input URL's origin
+    try:
+        import urllib.parse as _urlparse
+        parsed = _urlparse.urlparse(url)
+        referer = f"{parsed.scheme}://{parsed.netloc}" if parsed.scheme and parsed.netloc else url
+    except Exception:  # pragma: no cover
+        referer = url
+
+    default_headers = {
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/127.0.0.0 Safari/537.36"
+        ),
+        "Accept-Language": "vi,vi-VN;q=0.9,en;q=0.8",
+        "Referer": referer,
+    }
+    if raw_cookies:
+        default_headers["Cookie"] = raw_cookies
+    ydl_opts["http_headers"] = default_headers
 
     if is_audio:
         ydl_opts.update(
@@ -162,6 +184,7 @@ def channel_download():
     raw_username = (data.get("username") or "").strip()
     count = int(data.get("count") or 0)
     mode = (data.get("mode") or "video").strip().lower()
+    raw_cookies = (data.get("cookies") or "").strip()
 
     if not raw_username:
         return jsonify({"ok": False, "error": "Missing username"}), 400
@@ -194,6 +217,19 @@ def channel_download():
         # Merge format
         "merge_output_format": "mp4" if not is_audio else None,
     }
+
+    # Headers/cookies (mainly useful if channel has age-restriction or region locks)
+    default_headers = {
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/127.0.0.0 Safari/537.36"
+        ),
+        "Accept-Language": "vi,vi-VN;q=0.9,en;q=0.8",
+        "Referer": channel_url,
+    }
+    if raw_cookies:
+        default_headers["Cookie"] = raw_cookies
+    ydl_opts["http_headers"] = default_headers
 
     if is_audio:
         ydl_opts.update(
@@ -287,6 +323,7 @@ def profile_download():
     count = int(data.get("count") or 0)
     mode = (data.get("mode") or "video").strip().lower()
     quality = (data.get("quality") or "auto").strip()
+    raw_cookies = (data.get("cookies") or "").strip()
 
     if not raw_username:
         return jsonify({"ok": False, "error": "Missing username"}), 400
@@ -316,6 +353,19 @@ def profile_download():
 
     # quality/mode
     ydl_opts.update(format_for_quality(is_audio, quality))
+
+    # Set headers including optional Cookie for sites like Instagram/Facebook/Reddit
+    default_headers = {
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/127.0.0.0 Safari/537.36"
+        ),
+        "Accept-Language": "vi,vi-VN;q=0.9,en;q=0.8",
+        "Referer": profile_url,
+    }
+    if raw_cookies:
+        default_headers["Cookie"] = raw_cookies
+    ydl_opts["http_headers"] = default_headers
 
     before = {p.resolve() for p in base_dir.glob("**/*") if p.is_file()}
     try:
