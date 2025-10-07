@@ -59,6 +59,10 @@ def download():
         "merge_output_format": "mp4" if not is_audio else None,
         # Fail on playlist by default; we take only first entry if playlist
         "noplaylist": False,
+        # Improve YouTube access without cookies (use Android client, bypass geo, IPv4)
+        "extractor_args": {"youtube": {"player_client": ["android"]}},
+        "geo_bypass": True,
+        "force_ipv4": True,
     }
 
     # Provide a realistic UA and optional Cookie header for platforms that require login
@@ -216,6 +220,10 @@ def channel_download():
         "download_archive": str(archive_file),
         # Merge format
         "merge_output_format": "mp4" if not is_audio else None,
+        # YouTube tweaks
+        "extractor_args": {"youtube": {"player_client": ["android"]}},
+        "geo_bypass": True,
+        "force_ipv4": True,
     }
 
     # Headers/cookies (mainly useful if channel has age-restriction or region locks)
@@ -349,6 +357,10 @@ def profile_download():
         "playlistend": count,
         "download_archive": str(archive_file),
         "merge_output_format": "mp4" if not is_audio else None,
+        # YouTube tweaks
+        "extractor_args": {"youtube": {"player_client": ["android"]}},
+        "geo_bypass": True,
+        "force_ipv4": True,
     }
 
     # quality/mode
