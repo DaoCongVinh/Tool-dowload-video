@@ -78,30 +78,65 @@ async function download() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  // Tabs
-  document.querySelectorAll('.nav-item').forEach((btn) => {
+  // Tabs (new Sera UI style)
+  document.querySelectorAll('.tab-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
-      if (btn.id === 'themeToggle') return; // skip tab switching for theme
-      document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       const target = btn.getAttribute('data-target');
-      document.querySelectorAll('main .card').forEach(sec => sec.classList.add('hidden'));
-      if (target) document.querySelector(target)?.classList.remove('hidden');
+      document.querySelectorAll('.download-card').forEach(sec => sec.classList.add('card-hidden'));
+      if (target) document.getElementById(target)?.classList.remove('card-hidden');
     });
   });
 
-  // Theme toggle
-  const root = document.documentElement;
-  const savedTheme = localStorage.getItem('theme');
-  if (savedTheme === 'light') root.classList.add('light');
-  document.querySelector('#themeToggle')?.addEventListener('click', () => {
-    root.classList.toggle('light');
-    localStorage.setItem('theme', root.classList.contains('light') ? 'light' : 'dark');
+  // Scroll header effect
+  const header = document.querySelector('.download-header');
+  if (header) {
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 50) {
+        header.classList.add('scrolled');
+      } else {
+        header.classList.remove('scrolled');
+      }
+    });
+  }
+
+  // Add ripple effect to buttons
+  document.querySelectorAll('.sera-btn').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      const ripple = document.createElement('span');
+      ripple.classList.add('ripple-effect');
+      
+      const rect = this.getBoundingClientRect();
+      const size = Math.max(rect.width, rect.height);
+      const x = e.clientX - rect.left - size / 2;
+      const y = e.clientY - rect.top - size / 2;
+      
+      ripple.style.width = ripple.style.height = size + 'px';
+      ripple.style.left = x + 'px';
+      ripple.style.top = y + 'px';
+      ripple.style.position = 'absolute';
+      ripple.style.borderRadius = '50%';
+      ripple.style.background = 'rgba(255, 255, 255, 0.5)';
+      ripple.style.pointerEvents = 'none';
+      ripple.style.animation = 'ripple-animation 0.6s ease-out';
+      
+      this.appendChild(ripple);
+      setTimeout(() => ripple.remove(), 600);
+    });
   });
 
-  $("#downloadBtn").addEventListener("click", (e) => {
+  // Add CSS for ripple animation
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes ripple-animation {
+      to { transform: scale(4); opacity: 0; }
+    }
+  `;
+  document.head.appendChild(style);
+
+  $("#downloadBtn")?.addEventListener("click", (e) => {
     e.preventDefault();
-    spawnRipple(e);
     download();
   });
 
@@ -112,95 +147,24 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  const chBtn = document.querySelector("#channelBtn");
-  if (chBtn) {
-    chBtn.addEventListener("click", async (e) => {
-      e.preventDefault();
-      spawnRipple(e);
-      await channelDownload();
-    });
-  }
-
   const pfBtn = document.querySelector('#pfBtn');
   if (pfBtn) {
     pfBtn.addEventListener('click', async (e) => {
       e.preventDefault();
-      spawnRipple(e);
       await profileDownload();
     });
   }
-});
-function spawnRipple(e) {
-  const btn = e.currentTarget;
-  const circle = document.createElement('span');
-  const diameter = Math.max(btn.clientWidth, btn.clientHeight);
-  const rect = btn.getBoundingClientRect();
-  circle.style.width = circle.style.height = `${diameter}px`;
-  circle.style.left = `${e.clientX - rect.left - diameter / 2}px`;
-  circle.style.top = `${e.clientY - rect.top - diameter / 2}px`;
-  circle.classList.add('ripple');
-  btn.appendChild(circle);
-  setTimeout(() => circle.remove(), 600);
-}
 
-async function channelDownload() {
-  const err = document.querySelector('#chError');
-  err?.classList.add('hidden');
-  if (err) err.textContent = '';
-
-  const handle = document.querySelector('#ytHandle')?.value.trim();
-  const count = parseInt(document.querySelector('#ytCount')?.value || '0', 10) || 0;
-  const mode = document.querySelector('input[name="modeChannel"]:checked')?.value || 'video';
-  const cookies = document.querySelector('#chCookies')?.value?.trim() || '';
-  if (!handle || count <= 0) {
-    if (err) { err.textContent = 'Vui lòng nhập username và số lượng hợp lệ.'; err.classList.remove('hidden'); }
-    return;
-  }
-
-  setStatus(true, 'Đang tải video từ kênh...');
-  const btn = document.querySelector('#channelBtn');
-  btn.disabled = true;
-  try {
-    const res = await fetch('/api/channel_download', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: handle, count, mode, cookies }),
+  // Input focus animations
+  document.querySelectorAll('.sera-input').forEach(input => {
+    input.addEventListener('focus', function() {
+      this.parentElement?.classList.add('input-focused');
     });
-    if (!res.ok) {
-      let msg = `Lỗi tải (${res.status})`;
-      try { const j = await res.json(); if (j?.error) msg = j.error; } catch (_) {}
-      throw new Error(msg);
-    }
-
-    // if server says no new files
-    const cd = res.headers.get('Content-Type') || '';
-    if (cd.includes('application/json')) {
-      const j = await res.json();
-      if (j?.message) {
-        showToast(j.message);
-        if (err) { err.textContent = j.message; err.classList.remove('hidden'); }
-        return;
-      }
-    }
-
-    let filename = 'channel.zip';
-    const dispo = res.headers.get('Content-Disposition');
-    if (dispo) {
-      const m = dispo.match(/filename\*=UTF-8''([^;]+)|filename="?([^";]+)"?/i);
-      const picked = decodeURIComponent(m?.[1] || m?.[2] || '');
-      if (picked) filename = picked;
-    }
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
-  } catch (e) {
-    if (err) { err.textContent = e?.message || 'Có lỗi xảy ra.'; err.classList.remove('hidden'); }
-  } finally {
-    setStatus(false);
-    btn.disabled = false;
-  }
-}
+    input.addEventListener('blur', function() {
+      this.parentElement?.classList.remove('input-focused');
+    });
+  });
+});
 
 function showToast(message) {
   const bar = document.querySelector('#snackbar');
@@ -269,4 +233,5 @@ async function profileDownload() {
     btn.disabled = false;
   }
 }
+
 

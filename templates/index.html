@@ -3,115 +3,163 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Trình tải video đa nền tảng</title>
+    <title>Trình tải video đa nền tảng - MediaDL</title>
     <link rel="icon" href="/static/icon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:wght@400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/style.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/download.css" />
   </head>
   <body>
-    <div class="app-shell">
-      <header class="header">
+    <!-- Marquee Header -->
+    <div class="marquee-container">
+      <div 
+        data-marquee 
+        data-marquee-text="🎬 Tải video miễn phí • 📱 Hỗ trợ đa nền tảng • ⚡ Tốc độ cao • 🎵 Trích xuất âm thanh • 🔒 An toàn tuyệt đối • 💯 Không giới hạn • " 
+        data-marquee-speed="1.5" 
+        data-marquee-direction="left"
+        data-marquee-interactive="true"
+        style="visibility: hidden;"
+      ></div>
+    </div>
+
+    <!-- Header -->
+    <header class="download-header">
+      <div class="header-container">
         <div class="brand">
-          <div class="logo">⬇️</div>
-          <div class="titles">
-            <h1>Trình tải video</h1>
-            <p>Facebook · Instagram · Threads · TikTok · YouTube · Reddit</p>
+          <div class="brand-logo">⬇️</div>
+          <div class="brand-info">
+            <h1>MediaDL</h1>
+            <p>Download videos from any platform</p>
           </div>
-          <nav class="nav">
-            <button class="nav-item active" data-target="#sec-single"><span class="material-symbols-rounded">link</span><span>Tải 1 video</span></button>
-            <button class="nav-item" data-target="#sec-channel"><span class="material-symbols-rounded">subscriptions</span><span>Tải kênh</span></button>
-            <button class="nav-item" data-target="#sec-profile"><span class="material-symbols-rounded">person</span><span>Tải tài khoản</span></button>
-            <button id="themeToggle" class="nav-item" title="Đổi giao diện"><span class="material-symbols-rounded">brightness_6</span></button>
-          </nav>
         </div>
-      </header>
+        <nav class="header-nav">
+          <a href="/" class="nav-btn">
+            <span class="material-symbols-rounded">home</span>
+            <span>Trang chủ</span>
+          </a>
+          <button id="themeToggle" class="nav-btn">
+            <span class="material-symbols-rounded">brightness_6</span>
+          </button>
+        </nav>
+      </div>
+    </header>
 
-      <main class="main">
-        <section id="sec-single" class="card">
-          <div class="form">
-            <label for="url" class="label">Dán liên kết video</label>
+    <!-- Main -->
+    <main class="download-main">
+      <div class="download-container">
+        <!-- Tabs Navigation -->
+        <div class="tabs-nav">
+          <button class="tab-btn active" data-target="sec-single">
+            <span class="material-symbols-rounded">link</span>
+            <span>Tải 1 video</span>
+          </button>
+          <button class="tab-btn" data-target="sec-profile">
+            <span class="material-symbols-rounded">person</span>
+            <span>Tải tài khoản</span>
+          </button>
+        </div>
+
+        <!-- Single Video Download -->
+        <section id="sec-single" class="download-card">
+          <div class="form-section">
+            <div class="input-wrapper">
+              <label for="url" class="form-label">
+                <span class="material-symbols-rounded">link</span>
+                Dán liên kết video
+              </label>
+              <input id="url" type="url" class="sera-input" placeholder="https://youtube.com/watch?v=..." autofocus />
+            </div>
+
             <div class="input-row">
-              <input id="url" type="url" placeholder="https://..." autofocus />
-              <div class="mode">
-                <label><input type="radio" name="mode" value="video" checked /> Video</label>
-                <label><input type="radio" name="mode" value="audio" /> Âm thanh</label>
+              <div class="mode-toggle">
+                <div class="mode-option">
+                  <input type="radio" id="mode-video" name="mode" value="video" checked />
+                  <label for="mode-video">
+                    <span class="material-symbols-rounded">videocam</span>
+                    Video
+                  </label>
+                </div>
+                <div class="mode-option">
+                  <input type="radio" id="mode-audio" name="mode" value="audio" />
+                  <label for="mode-audio">
+                    <span class="material-symbols-rounded">music_note</span>
+                    Âm thanh
+                  </label>
+                </div>
               </div>
-              <button id="downloadBtn" class="btn-primary"><span class="material-symbols-rounded">download</span><span>Tải xuống</span></button>
+              <button id="downloadBtn" class="sera-btn primary">
+                <span class="material-symbols-rounded">download</span>
+                Tải xuống
+              </button>
             </div>
-            <div class="input-row" style="grid-template-columns: 1fr; margin-top: 8px;">
-              <input id="cookies" type="text" placeholder="Tùy chọn: Dán Cookie (vd: sessionid=...; csrftoken=... ) cho Instagram/Facebook/Reddit nếu cần" />
+
+            <div class="input-wrapper">
+              <input id="cookies" type="text" class="sera-input" placeholder="Tùy chọn: Dán Cookie cho Instagram/Facebook/Reddit nếu cần" />
+              <p class="help-text">
+                <span class="material-symbols-rounded" style="font-size: 1rem;">info</span>
+                Hỗ trợ các nền tảng phổ biến. Một số video riêng tư có thể cần cookie.
+              </p>
             </div>
-            <p class="help">Hỗ trợ các nền tảng phổ biến. Một số video riêng tư có thể không tải được.</p>
           </div>
 
-          <div id="status" class="status hidden">
+          <div id="status" class="status-box hidden">
             <div class="spinner"></div>
             <span id="statusText">Đang chuẩn bị tải...</span>
           </div>
 
-          <div id="error" class="error hidden"></div>
+          <div id="error" class="error-box hidden"></div>
         </section>
 
-        <section id="sec-channel" class="card hidden" style="margin-top:20px;">
-          <div class="form">
-            <label class="label">Tải video theo kênh YouTube</label>
+        <!-- Profile Download -->
+        <section id="sec-profile" class="download-card card-hidden">
+          <div class="form-section">
+            <div class="input-wrapper">
+              <label class="form-label">
+                <span class="material-symbols-rounded">person</span>
+                Tải theo tài khoản (YouTube/TikTok/Instagram/Reddit)
+              </label>
+              <input id="pfHandle" type="text" class="sera-input" placeholder="username hoặc @username" />
+            </div>
+
             <div class="input-row">
-              <input id="ytHandle" type="text" placeholder="@tenkenh hoặc tenkenh" />
-              <input id="ytCount" type="number" min="1" max="100" value="5" style="max-width:140px;" />
-              <div class="mode">
-                <label><input type="radio" name="modeChannel" value="video" checked /> Video</label>
-                <label><input type="radio" name="modeChannel" value="audio" /> Âm thanh</label>
-              </div>
-              <button id="channelBtn" class="btn-primary"><span class="material-symbols-rounded">subscriptions</span><span>Tải kênh</span></button>
-            </div>
-            <div class="input-row" style="grid-template-columns: 1fr; margin-top: 8px;">
-              <input id="chCookies" type="text" placeholder="Tùy chọn: Dán Cookie nếu kênh/youtube có giới hạn tuổi/khu vực" />
-            </div>
-            <p class="help">Nhập username/handle kênh YouTube. Hệ thống sẽ tải N video mới nhất, bỏ qua video đã tải.</p>
-          </div>
-          <div id="chError" class="error hidden"></div>
-        </section>
-
-        <section id="sec-profile" class="card hidden" style="margin-top:20px;">
-          <div class="form">
-            <label class="label">Tải theo tài khoản (YouTube/TikTok/Instagram/Reddit)</label>
-            <div class="input-row" style="grid-template-columns: 1fr auto auto auto auto;">
-              <input id="pfHandle" type="text" placeholder="username hoặc @username" />
-              <select id="pfPlatform">
+              <select id="pfPlatform" class="sera-select">
                 <option value="youtube">YouTube</option>
                 <option value="tiktok">TikTok</option>
                 <option value="instagram">Instagram</option>
                 <option value="reddit">Reddit</option>
               </select>
-              <select id="pfQuality">
+              <select id="pfQuality" class="sera-select">
                 <option value="auto">Auto</option>
                 <option value="1080p">1080p</option>
                 <option value="720p">720p</option>
               </select>
-              <input id="pfCount" type="number" min="1" max="100" value="5" style="max-width:120px;" />
-              <button id="pfBtn" class="btn-primary"><span class="material-symbols-rounded">cloud_download</span><span>Tải tài khoản</span></button>
+              <input id="pfCount" type="number" class="sera-input" min="1" max="100" value="5" placeholder="Số lượng" />
+              <button id="pfBtn" class="sera-btn primary">
+                <span class="material-symbols-rounded">cloud_download</span>
+                Tải tài khoản
+              </button>
             </div>
-            <div class="input-row" style="grid-template-columns: 1fr; margin-top: 8px;">
-              <input id="pfCookies" type="text" placeholder="Tùy chọn: Dán Cookie (cần cho Instagram/Facebook/Reddit tài khoản riêng tư)" />
+
+            <div class="input-wrapper">
+              <input id="pfCookies" type="text" class="sera-input" placeholder="Tùy chọn: Dán Cookie cho tài khoản riêng tư" />
+              <p class="help-text">
+                <span class="material-symbols-rounded" style="font-size: 1rem;">info</span>
+                Hỗ trợ bỏ qua video đã tải. Instagram/Facebook/Reddit có thể cần cookie.
+              </p>
             </div>
-            <p class="help">Hỗ trợ bỏ qua video đã tải. Một số nền tảng có thể yêu cầu cookie đăng nhập.</p>
           </div>
-          <div id="pfError" class="error hidden"></div>
+          <div id="pfError" class="error-box hidden"></div>
         </section>
-      </main>
+      </div>
+    </main>
 
-      <footer class="footer">
-        <p>
-          Sử dụng cho mục đích hợp pháp. Tôn trọng bản quyền và điều khoản nền tảng.
-        </p>
-      </footer>
-    </div>
-
-    <script src="/static/app.js"></script>
+    <!-- Snackbar -->
     <div id="snackbar" class="snackbar hidden"><span id="snackbarText"></span></div>
+
+    <script src="/static/marquee.js"></script>
+    <script src="/static/app.js"></script>
   </body>
-  </html>
+</html>
 

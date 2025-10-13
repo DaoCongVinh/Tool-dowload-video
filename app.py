@@ -12,7 +12,7 @@ import yt_dlp
 
 app = Flask(__name__, static_folder="static", template_folder="templates")
 
-# Persistent downloads root (skips re-downloads across sessions)
+# Persistent downloads root (skips re-downloads across sessions)x
 DOWNLOADS_ROOT = Path("downloads")
 DOWNLOADS_ROOT.mkdir(parents=True, exist_ok=True)
 
@@ -59,6 +59,11 @@ def try_extract_with_clients(url: str, base_opts: dict, clients: list[str]) -> t
 
 @app.get("/")
 def index():
+    return render_template("landing.html")
+
+
+@app.get("/download")
+def download_page():
     return render_template("index.html")
 
 
